@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}학생 대시보드 - {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-mortarboard me-2"></i>학생 대시보드
+                </h2>
+                <p class="text-muted mb-0">
+                    {{ user.name }}님 ({{ user.student_id }}) | {{ user.department }}
+                </p>
+            </div>
+            <a href="{{ url_for('create_counseling') }}" class="btn btn-primary btn-lg">
+                <i class="bi bi-plus-circle me-2"></i>새 상담 요청
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 통계 카드 -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-chat-dots-fill display-4 mb-2"></i>
+                <h3 class="card-title">{{ counselings|length }}</h3>
+                <p class="card-text">총 상담 요청</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-hourglass-split display-4 mb-2"></i>
+                <h3 class="card-title">{{ counselings|selectattr("status", "equalto", "pending")|list|length }}</h3>
+                <p class="card-text">대기 중</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-arrow-repeat display-4 mb-2"></i>
+                <h3 class="card-title">{{ counselings|selectattr("status", "equalto", "in_progress")|list|length }}</h3>
+                <p class="card-text">진행 중</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle-fill display-4 mb-2"></i>
+                <h3 class="card-title">{{ counselings|selectattr("status", "equalto", "completed")|list|length }}</h3>
+                <p class="card-text">완료</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 최근 상담 요청 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul me-2"></i>나의 상담 요청 목록
+                </h5>
+                <span class="badge bg-light text-dark">{{ counselings|length }}건</span>
+            </div>
+            <div class="card-body">
+                {% if counselings %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="25%">제목</th>
+                                <th width="30%">내용</th>
+                                <th width="10%">카테고리</th>
+                                <th width="10%">우선순위</th>
+                                <th width="10%">상태</th>
+                                <th width="10%">생성일</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for counseling in counselings %}
+                            <tr class="priority-{{ counseling.priority }}">
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_counseling', counseling_id=counseling.id) }}" 
+                                       class="text-decoration-none">
+                                        <strong>{{ counseling.title }}</strong>
+                                    </a>
+                                    {% if counseling.priority == 'high' %}
+                                        <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="높은 우선순위"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-muted">
+                                        {{ counseling.content[:60] }}
+                                        {% if counseling.content|length > 60 %}...{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ counseling.category }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if counseling.priority == 'high' %}bg-danger
+                                        {% elif counseling.priority == 'normal' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {% if counseling.priority == 'high' %}높음
+                                        {% elif counseling.priority == 'normal' %}보통
+                                        {% else %}낮음{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge status-{{ counseling.status }}">
+                                        {% if counseling.status == 'pending' %}
+                                            <i class="bi bi-clock me-1"></i>대기 중
+                                        {% elif counseling.status == 'in_progress' %}
+                                            <i class="bi bi-arrow-repeat me-1"></i>진행 중
+                                        {% elif counseling.status == 'completed' %}
+                                            <i class="bi bi-check-circle me-1"></i>완료
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ counseling.created_at[:10] }}<br>
+                                        {{ counseling.created_at[11:16] }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-chat-dots display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted">아직 상담 요청이 없습니다</h4>
+                    <p class="text-muted mb-4">첫 번째 상담을 요청해보세요!</p>
+                    <a href="{{ url_for('create_counseling') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>첫 상담 요청하기
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 도움말 섹션 -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card bg-light border-0">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-lightbulb text-warning me-2"></i>상담 요청 팁
+                </h6>
+                <ul class="list-unstyled small mb-0">
+                    <li><i class="bi bi-check text-success me-1"></i> 구체적이고 명확한 질문을 작성하세요</li>
+                    <li><i class="bi bi-check text-success me-1"></i> 긴급한 사안은 우선순위를 '높음'으로 설정하세요</li>
+                    <li><i class="bi bi-check text-success me-1"></i> 적절한 카테고리를 선택하세요</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-light border-0">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle text-info me-2"></i>상담 진행 상태
+                </h6>
+                <ul class="list-unstyled small mb-0">
+                    <li><i class="bi bi-clock text-warning me-1"></i> <strong>대기 중:</strong> 교수님 배정 대기</li>
+                    <li><i class="bi bi-arrow-repeat text-info me-1"></i> <strong>진행 중:</strong> 교수님이 검토 중</li>
+                    <li><i class="bi bi-check-circle text-success me-1"></i> <strong>완료:</strong> 상담 완료</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 테이블 행 클릭시 상세보기
+document.querySelectorAll('tbody tr').forEach(row => {
+    row.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'A') {
+            const link = this.querySelector('a');
+            if (link) {
+                window.location.href = link.href;
+            }
+        }
+    });
+    
+    row.style.cursor = 'pointer';
+});
+
+// 실시간 통계 업데이트 (선택사항)
+function updateStats() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Stats updated:', data);
+        })
+        .catch(error => console.error('Error fetching stats:', error));
+}
+
+// 30초마다 통계 업데이트
+setInterval(updateStats, 30000);
+</script>
+{% endblock %}

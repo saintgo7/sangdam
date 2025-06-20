@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}상담 요청 작성 - 상담 관리 시스템{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h3>
+                    <i class="bi bi-pencil-square me-2"></i>새 상담 요청 작성
+                </h3>
+                <p class="mb-0 small text-white-50">교수님께 상담을 요청해보세요</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('create_counseling') }}" id="counselingForm">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">
+                                    <i class="bi bi-card-heading me-1"></i>제목 *
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="title" 
+                                       name="title" 
+                                       placeholder="상담 요청의 제목을 입력하세요"
+                                       required
+                                       maxlength="100">
+                                <div class="form-text">명확하고 구체적인 제목을 작성해주세요 (최대 100자)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">
+                                    <i class="bi bi-flag me-1"></i>우선순위
+                                </label>
+                                <select class="form-select form-select-lg" id="priority" name="priority">
+                                    <option value="normal" selected>보통</option>
+                                    <option value="high">높음 (긴급)</option>
+                                    <option value="low">낮음</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">
+                            <i class="bi bi-tags me-1"></i>카테고리
+                        </label>
+                        <select class="form-select form-select-lg" id="category" name="category">
+                            <option value="학업">학업 (수강신청, 졸업요건 등)</option>
+                            <option value="진로">진로 (취업, 대학원 진학 등)</option>
+                            <option value="학생생활">학생생활 (동아리, 장학금 등)</option>
+                            <option value="연구">연구 (논문, 프로젝트 등)</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="content" class="form-label">
+                            <i class="bi bi-chat-text me-1"></i>상담 내용 *
+                        </label>
+                        <textarea class="form-control" 
+                                  id="content" 
+                                  name="content" 
+                                  rows="10" 
+                                  placeholder="상담하고 싶은 내용을 자세히 작성해주세요.
+
+구체적인 질문일수록 더 정확하고 도움이 되는 답변을 받을 수 있습니다.
+
+예시:
+• 졸업요건: '컴퓨터공학과 졸업을 위해 필요한 전공필수 과목과 학점이 궁금합니다.'
+• 수강신청: '다음 학기에 들을 과목을 추천해주세요. 현재 3학년이고 전공 GPA는 3.2입니다.'
+• 진로상담: '소프트웨어 개발자가 되고 싶은데 어떤 준비를 해야 할까요?'"
+                                  required
+                                  maxlength="2000"></textarea>
+                        <div class="form-text">최대 2000자까지 입력 가능합니다. <span id="charCount">0</span>/2000</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i>대시보드로 돌아가기
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="bi bi-send me-2"></i>상담 요청 제출
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 도움말 카드 -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card bg-primary bg-opacity-10 border-primary border-opacity-25">
+                    <div class="card-body">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-lightbulb me-2"></i>효과적인 상담 요청 작성법
+                        </h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>구체적인 상황 설명:</strong> 현재 상황과 배경을 명확히 설명하세요
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>명확한 질문:</strong> 궁금한 점을 구체적으로 질문하세요
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>관련 정보 제공:</strong> 학년, 전공, 관련 과목 등을 포함하세요
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong>예의바른 표현:</strong> 정중하고 예의바른 언어를 사용하세요
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-info bg-opacity-10 border-info border-opacity-25">
+                    <div class="card-body">
+                        <h6 class="text-info mb-3">
+                            <i class="bi bi-info-circle me-2"></i>상담 진행 안내
+                        </h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-1-circle text-info me-2"></i>
+                                <strong>요청 제출:</strong> 상담 요청서를 작성하고 제출합니다
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-2-circle text-info me-2"></i>
+                                <strong>교수 배정:</strong> 적합한 교수님이 배정됩니다
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-3-circle text-info me-2"></i>
+                                <strong>상담 진행:</strong> 교수님이 검토하고 답변합니다
+                            </li>
+                            <li>
+                                <i class="bi bi-4-circle text-info me-2"></i>
+                                <strong>상담 완료:</strong> 피드백을 받고 상담이 완료됩니다
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 카테고리별 예시 -->
+        <div class="card mt-3 bg-light border-0">
+            <div class="card-body">
+                <h6 class="mb-3">
+                    <i class="bi bi-journal-text me-2"></i>카테고리별 상담 예시
+                </h6>
+                <div class="row small">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong class="text-primary">학업 상담:</strong>
+                            <ul class="list-unstyled ms-3 mt-1">
+                                <li>• 졸업 요건 및 필수 과목 문의</li>
+                                <li>• 수강신청 계획 및 과목 추천</li>
+                                <li>• 학업 성취도 향상 방법</li>
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <strong class="text-success">진로 상담:</strong>
+                            <ul class="list-unstyled ms-3 mt-1">
+                                <li>• 취업 준비 및 진로 방향</li>
+                                <li>• 대학원 진학 상담</li>
+                                <li>• 인턴십 및 현장실습</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong class="text-warning">학생생활:</strong>
+                            <ul class="list-unstyled ms-3 mt-1">
+                                <li>• 동아리 및 학회 활동</li>
+                                <li>• 장학금 신청 및 혜택</li>
+                                <li>• 교환학생 프로그램</li>
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <strong class="text-info">연구 상담:</strong>
+                            <ul class="list-unstyled ms-3 mt-1">
+                                <li>• 졸업 논문 주제 선정</li>
+                                <li>• 연구 프로젝트 참여</li>
+                                <li>• 학술 활동 및 학회 발표</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 글자 수 카운터
+const contentTextarea = document.getElementById('content');
+const charCount = document.getElementById('charCount');
+
+contentTextarea.addEventListener('input', function() {
+    const currentLength = this.value.length;
+    charCount.textContent = currentLength;
+    
+    if (currentLength > 1800) {
+        charCount.style.color = '#dc3545';
+    } else if (currentLength > 1500) {
+        charCount.style.color = '#ffc107';
+    } else {
+        charCount.style.color = '#6c757d';
+    }
+});
+
+// 폼 제출 처리
+document.getElementById('counselingForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const title = document.getElementById('title').value.trim();
+    const content = document.getElementById('content').value.trim();
+    
+    // 기본 유효성 검사
+    if (!title || !content) {
+        e.preventDefault();
+        alert('제목과 내용을 모두 입력해주세요.');
+        return;
+    }
+    
+    if (title.length < 5) {
+        e.preventDefault();
+        alert('제목은 최소 5자 이상 입력해주세요.');
+        return;
+    }
+    
+    if (content.length < 20) {
+        e.preventDefault();
+        alert('상담 내용은 최소 20자 이상 입력해주세요.');
+        return;
+    }
+    
+    // 제출 버튼 비활성화 및 로딩 표시
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>제출 중...';
+    submitBtn.disabled = true;
+    
+    // 5초 후 원래 상태로 복구 (에러 발생시를 위해)
+    setTimeout(() => {
+        submitBtn.innerHTML = '<i class="bi bi-send me-2"></i>상담 요청 제출';
+        submitBtn.disabled = false;
+    }, 5000);
+});
+
+// 우선순위 선택시 안내 메시지
+document.getElementById('priority').addEventListener('change', function() {
+    const priority = this.value;
+    let message = '';
+    
+    switch(priority) {
+        case 'high':
+            message = '긴급한 상담 요청입니다. 빠른 답변이 필요한 경우에만 선택하세요.';
+            break;
+        case 'low':
+            message = '여유로운 상담 요청입니다. 답변까지 시간이 걸릴 수 있습니다.';
+            break;
+        default:
+            message = '일반적인 상담 요청입니다.';
+    }
+    
+    // 임시 알림 표시
+    const existingAlert = document.querySelector('.priority-alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    if (priority !== 'normal') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${priority === 'high' ? 'warning' : 'info'} alert-dismissible fade show priority-alert mt-2`;
+        alertDiv.innerHTML = `
+            <i class="bi bi-info-circle me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        this.parentNode.appendChild(alertDiv);
+    }
+});
+
+// 자동 저장 기능 (선택사항)
+let autoSaveTimer;
+const formData = {};
+
+function autoSave() {
+    formData.title = document.getElementById('title').value;
+    formData.content = document.getElementById('content').value;
+    formData.category = document.getElementById('category').value;
+    formData.priority = document.getElementById('priority').value;
+    
+    localStorage.setItem('counseling_draft', JSON.stringify(formData));
+}
+
+// 입력시마다 자동 저장
+['title', 'content', 'category', 'priority'].forEach(fieldId => {
+    document.getElementById(fieldId).addEventListener('input', function() {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(autoSave, 2000); // 2초 후 저장
+    });
+});
+
+// 페이지 로드시 임시저장 데이터 복구
+window.addEventListener('load', function() {
+    const savedData = localStorage.getItem('counseling_draft');
+    if (savedData && confirm('이전에 작성 중이던 내용이 있습니다. 복구하시겠습니까?')) {
+        const data = JSON.parse(savedData);
+        document.getElementById('title').value = data.title || '';
+        document.getElementById('content').value = data.content || '';
+        document.getElementById('category').value = data.category || '학업';
+        document.getElementById('priority').value = data.priority || 'normal';
+        
+        // 글자 수 업데이트
+        contentTextarea.dispatchEvent(new Event('input'));
+    }
+});
+
+// 폼 제출 성공시 임시저장 데이터 삭제
+document.getElementById('counselingForm').addEventListener('submit', function() {
+    localStorage.removeItem('counseling_draft');
+});
+</script>
+{% endblock %}

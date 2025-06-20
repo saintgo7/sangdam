@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}교수 대시보드 - 상담 관리 시스템{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>👨‍🏫 교수 대시보드</h2>
+        <p class="text-muted">학생들의 상담 요청을 관리하세요.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">📊 전체 상담</h5>
+                <p class="card-text display-6">{{ counselings|length }}건</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">⏳ 대기 중</h5>
+                <p class="card-text display-6">
+                    {{ counselings|selectattr("status", "equalto", "pending")|list|length }}건
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">🔄 진행 중</h5>
+                <p class="card-text display-6">
+                    {{ counselings|selectattr("status", "equalto", "in_progress")|list|length }}건
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">✅ 완료</h5>
+                <p class="card-text display-6">
+                    {{ counselings|selectattr("status", "equalto", "completed")|list|length }}건
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📝 상담 요청 목록</h5>
+            </div>
+            <div class="card-body">
+                {% if counselings %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>제목</th>
+                                <th>내용</th>
+                                <th>학생</th>
+                                <th>상태</th>
+                                <th>생성일</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for counseling in counselings %}
+                            <tr>
+                                <td><strong>{{ counseling.title }}</strong></td>
+                                <td>{{ counseling.content[:50] }}{% if counseling.content|length > 50 %}...{% endif %}</td>
+                                <td>학생{{ counseling.student_id[-1:] }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if counseling.status == 'pending' %}bg-warning
+                                        {% elif counseling.status == 'in_progress' %}bg-info
+                                        {% elif counseling.status == 'completed' %}bg-success
+                                        {% endif %}">
+                                        {% if counseling.status == 'pending' %}대기 중
+                                        {% elif counseling.status == 'in_progress' %}진행 중
+                                        {% elif counseling.status == 'completed' %}완료
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ counseling.created_at[:10] }}</td>
+                                <td>
+                                    {% if counseling.status == 'pending' and not counseling.professor_id %}
+                                    <form method="POST" action="{{ url_for('assign_counseling', counseling_id=counseling.id) }}" style="display: inline;">
+                                        <input type="hidden" name="counseling_id" value="{{ counseling.id }}">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            👥 담당하기
+                                        </button>
+                                    </form>
+                                    {% elif counseling.professor_id == session.user_id %}
+                                    <span class="text-success">담당 중</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">현재 상담 요청이 없습니다.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

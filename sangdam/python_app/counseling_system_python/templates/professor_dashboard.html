@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}교수 대시보드 - {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="bi bi-person-badge me-2"></i>교수 대시보드
+                </h2>
+                <p class="text-muted mb-0">
+                    {{ user.name }}님 | {{ user.department }} | {{ user.office }}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" onclick="refreshData()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>새로고침
+                </button>
+                <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#statsModal">
+                    <i class="bi bi-graph-up me-1"></i>통계 보기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 통계 카드 -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-list-task display-4 mb-2"></i>
+                <h3 class="card-title">{{ counselings|length }}</h3>
+                <p class="card-text">총 상담 건수</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-hourglass-split display-4 mb-2"></i>
+                <h3 class="card-title">{{ counselings|selectattr("status", "equalto", "pending")|list|length }}</h3>
+                <p class="card-text">대기 중</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-arrow-repeat display-4 mb-2"></i>
+                <h3 class="card-title">{{ counselings|selectattr("status", "equalto", "in_progress")|list|length }}</h3>
+                <p class="card-text">진행 중</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle-fill display-4 mb-2"></i>
+                <h3 class="card-title">{{ counselings|selectattr("status", "equalto", "completed")|list|length }}</h3>
+                <p class="card-text">완료</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 상담 요청 목록 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-inbox me-2"></i>상담 요청 관리
+                </h5>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" id="statusFilter" onchange="filterByStatus()">
+                        <option value="">전체 상태</option>
+                        <option value="pending">대기 중</option>
+                        <option value="in_progress">진행 중</option>
+                        <option value="completed">완료</option>
+                    </select>
+                    <select class="form-select form-select-sm" id="priorityFilter" onchange="filterByPriority()">
+                        <option value="">전체 우선순위</option>
+                        <option value="high">높음</option>
+                        <option value="normal">보통</option>
+                        <option value="low">낮음</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if counselings %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="counselingTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="20%">제목</th>
+                                <th width="25%">내용</th>
+                                <th width="10%">학생</th>
+                                <th width="8%">카테고리</th>
+                                <th width="8%">우선순위</th>
+                                <th width="10%">상태</th>
+                                <th width="10%">생성일</th>
+                                <th width="14%">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for counseling in counselings %}
+                            <tr class="priority-{{ counseling.priority }}" 
+                                data-status="{{ counseling.status }}" 
+                                data-priority="{{ counseling.priority }}">
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_counseling', counseling_id=counseling.id) }}" 
+                                       class="text-decoration-none">
+                                        <strong>{{ counseling.title }}</strong>
+                                    </a>
+                                    {% if counseling.priority == 'high' %}
+                                        <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="긴급"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-muted">
+                                        {{ counseling.content[:50] }}
+                                        {% if counseling.content|length > 50 %}...{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set student = counseling.student_id %}
+                                    <span class="badge bg-light text-dark">
+                                        학생{{ student[-1:] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ counseling.category }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if counseling.priority == 'high' %}bg-danger
+                                        {% elif counseling.priority == 'normal' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {% if counseling.priority == 'high' %}높음
+                                        {% elif counseling.priority == 'normal' %}보통
+                                        {% else %}낮음{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge status-badge status-{{ counseling.status }}">
+                                        {% if counseling.status == 'pending' %}
+                                            <i class="bi bi-clock me-1"></i>대기 중
+                                        {% elif counseling.status == 'in_progress' %}
+                                            <i class="bi bi-arrow-repeat me-1"></i>진행 중
+                                        {% elif counseling.status == 'completed' %}
+                                            <i class="bi bi-check-circle me-1"></i>완료
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ counseling.created_at[:10] }}<br>
+                                        {{ counseling.created_at[11:16] }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if counseling.status == 'pending' and not counseling.professor_id %}
+                                        <form method="POST" action="{{ url_for('assign_counseling', counseling_id=counseling.id) }}" style="display: inline;" class="mb-1">
+                                            <input type="hidden" name="counseling_id" value="{{ counseling.id }}">
+                                            <button type="submit" class="btn btn-success btn-sm w-100" 
+                                                    onclick="return confirm('이 상담을 담당하시겠습니까?')">
+                                                <i class="bi bi-person-plus me-1"></i>담당하기
+                                            </button>
+                                        </form>
+                                    {% elif counseling.professor_id == session.user_id and counseling.status == 'in_progress' %}
+                                        <button class="btn btn-primary btn-sm w-100 mb-1" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#completeModal"
+                                                onclick="setCompleteModal('{{ counseling.id }}', '{{ counseling.title }}')">
+                                            <i class="bi bi-check-square me-1"></i>완료 처리
+                                        </button>
+                                    {% elif counseling.professor_id == session.user_id %}
+                                        <span class="badge bg-success">담당 중</span>
+                                    {% elif counseling.status == 'completed' %}
+                                        <span class="badge bg-success">완료됨</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">다른 교수 담당</span>
+                                    {% endif %}
+                                    
+                                    <a href="{{ url_for('view_counseling', counseling_id=counseling.id) }}" 
+                                       class="btn btn-outline-info btn-sm w-100">
+                                        <i class="bi bi-eye me-1"></i>상세보기
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted">상담 요청이 없습니다</h4>
+                    <p class="text-muted">학생들의 상담 요청을 기다리고 있습니다.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 상담 완료 모달 -->
+<div class="modal fade" id="completeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle me-2"></i>상담 완료 처리
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="completeForm">
+                <div class="modal-body">
+                    <p><strong>상담 제목:</strong> <span id="counselingTitle"></span></p>
+                    <div class="mb-3">
+                        <label for="feedback" class="form-label">피드백 (선택사항)</label>
+                        <textarea class="form-control" id="feedback" name="feedback" rows="4" 
+                                  placeholder="학생에게 전달할 피드백을 작성하세요..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i>완료 처리
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 통계 모달 -->
+<div class="modal fade" id="statsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-graph-up me-2"></i>상담 통계
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="statusChart" width="300" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="priorityChart" width="300" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setCompleteModal(counselingId, title) {
+    document.getElementById('counselingTitle').textContent = title;
+    document.getElementById('completeForm').action = `/counseling/${counselingId}/complete`;
+}
+
+function refreshData() {
+    location.reload();
+}
+
+function filterByStatus() {
+    const filter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#counselingTable tbody tr');
+    
+    rows.forEach(row => {
+        if (filter === '' || row.dataset.status === filter) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filterByPriority() {
+    const filter = document.getElementById('priorityFilter').value;
+    const rows = document.querySelectorAll('#counselingTable tbody tr');
+    
+    rows.forEach(row => {
+        if (filter === '' || row.dataset.priority === filter) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// 통계 차트 (간단한 버전)
+function initCharts() {
+    // 상태별 통계
+    const statusData = {
+        pending: {{ counselings|selectattr("status", "equalto", "pending")|list|length }},
+        in_progress: {{ counselings|selectattr("status", "equalto", "in_progress")|list|length }},
+        completed: {{ counselings|selectattr("status", "equalto", "completed")|list|length }}
+    };
+    
+    // 우선순위별 통계
+    const priorityData = {
+        high: {{ counselings|selectattr("priority", "equalto", "high")|list|length }},
+        normal: {{ counselings|selectattr("priority", "equalto", "normal")|list|length }},
+        low: {{ counselings|selectattr("priority", "equalto", "low")|list|length }}
+    };
+    
+    console.log('Status data:', statusData);
+    console.log('Priority data:', priorityData);
+}
+
+// 페이지 로드시 차트 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    initCharts();
+});
+
+// 실시간 데이터 업데이트
+setInterval(function() {
+    // 간단한 알림 표시
+    const timestamp = new Date().toLocaleTimeString();
+    console.log(`Data updated at ${timestamp}`);
+}, 60000); // 1분마다
+</script>
+{% endblock %}

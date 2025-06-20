@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 - 상담 관리 시스템{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h3><i class="bi bi-shield-lock me-2"></i>시스템 로그인</h3>
+                <p class="mb-0 small">학생-교수 상담 관리 시스템</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="bi bi-person-fill me-1"></i>사용자명
+                        </label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="username" 
+                               name="username" 
+                               placeholder="사용자명을 입력하세요"
+                               required
+                               autocomplete="username">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="bi bi-lock-fill me-1"></i>비밀번호
+                        </label>
+                        <input type="password" 
+                               class="form-control form-control-lg" 
+                               id="password" 
+                               name="password" 
+                               placeholder="비밀번호를 입력하세요"
+                               required
+                               autocomplete="current-password">
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>로그인
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-center mb-3">
+                            <i class="bi bi-info-circle me-1"></i>테스트 계정
+                        </h6>
+                    </div>
+                </div>
+                
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="card bg-light border-0">
+                            <div class="card-body p-3">
+                                <h6 class="card-title text-primary mb-2">
+                                    <i class="bi bi-mortarboard me-1"></i>학생 계정
+                                </h6>
+                                <p class="card-text small mb-1">
+                                    <strong>ID:</strong> student1<br>
+                                    <strong>PW:</strong> password123
+                                </p>
+                                <button class="btn btn-outline-primary btn-sm" onclick="fillLogin('student1', 'password123')">
+                                    빠른 로그인
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light border-0">
+                            <div class="card-body p-3">
+                                <h6 class="card-title text-success mb-2">
+                                    <i class="bi bi-person-badge me-1"></i>교수 계정
+                                </h6>
+                                <p class="card-text small mb-1">
+                                    <strong>ID:</strong> professor1<br>
+                                    <strong>PW:</strong> password123
+                                </p>
+                                <button class="btn btn-outline-success btn-sm" onclick="fillLogin('professor1', 'password123')">
+                                    빠른 로그인
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <div class="card bg-info bg-opacity-10 border-info border-opacity-25">
+                        <div class="card-body p-3">
+                            <h6 class="text-info mb-2">
+                                <i class="bi bi-lightbulb me-1"></i>추가 계정
+                            </h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        <strong>학생2:</strong> student2<br>
+                                        <strong>교수2:</strong> professor2
+                                    </small>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">
+                                        모든 계정 비밀번호:<br>
+                                        <strong>password123</strong>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-center bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock me-1"></i>
+                    현재 시간: <span id="current-time"></span>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function fillLogin(username, password) {
+    document.getElementById('username').value = username;
+    document.getElementById('password').value = password;
+    
+    // 입력 필드에 포커스 효과
+    document.getElementById('username').focus();
+    setTimeout(() => {
+        document.getElementById('password').focus();
+    }, 100);
+}
+
+// 엔터 키로 폼 제출
+document.getElementById('loginForm').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        this.submit();
+    }
+});
+
+// 로그인 버튼 로딩 효과
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalContent = submitButton.innerHTML;
+    
+    submitButton.innerHTML = '<i class="bi bi-arrow-clockwise spin me-2"></i>로그인 중...';
+    submitButton.disabled = true;
+    
+    // 3초 후에 원래 상태로 복구 (에러 발생시를 위해)
+    setTimeout(() => {
+        submitButton.innerHTML = originalContent;
+        submitButton.disabled = false;
+    }, 3000);
+});
+</script>
+
+<style>
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    transition: transform 0.1s ease-in-out;
+}
+</style>
+{% endblock %}
