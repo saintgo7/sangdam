@@ -155,3 +155,8 @@ Thumbs.db
 # Local configuration
 config.local.py
 settings.local.py
+ engineering_calculator.py
+        gui_calculator.py
+        hangul_demo.py
+        hangul_test_simple.py
+        simple_hangul_test.py
